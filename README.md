@@ -196,7 +196,8 @@ sudo systemctl restart kiosk.service
 ## **One-Line Installation Command**
 
 To install everything in one step, use:
-**NOTE:** Remember to change the URL.
+
+*NOTE: Remember to change the URL.*
 
 ```sh
 sudo apt update && sudo apt -y full-upgrade && \
