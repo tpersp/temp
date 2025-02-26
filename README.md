@@ -73,7 +73,7 @@ unclutter -idle 1 -root &
 sleep 5
 
 # Launch Chromium in kiosk mode
-chromium --noerrdialogs --disable-infobars --kiosk "http(s)://your-website-url"
+chromium --force-x11 --noerrdialogs --disable-infobars --kiosk "http(s)://your-website-url"
 ```
 
 Save and exit (`CTRL+X`, then `Y`, then `Enter`).
