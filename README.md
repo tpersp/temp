@@ -177,10 +177,10 @@ To adjust the website scale, edit the `--force-device-scale-factor=X` flag in th
 - `1.25`  = 125%  (Zoomed In)
 - `1.5`   = 150%  (More Zoomed In)
 
-Modify the command as needed for your setup:
+Modify the command as needed for your setup, e.g.:
 
 ```sh
-chromium --force-x11 --noerrdialogs --disable-infobars --kiosk --force-device-scale-factor=`1.5` "http(s)://your-website-url"
+chromium --force-x11 --noerrdialogs --disable-infobars --kiosk --force-device-scale-factor=**1.5** "http(s)://your-website-url"
 ```
 
 Restart the service:
