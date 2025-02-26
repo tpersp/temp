@@ -177,7 +177,7 @@ To adjust the website scale, edit the `--force-device-scale-factor=X` flag in th
 - `1.25`  = 125%  (Zoomed In)
 - `1.5`   = 150%  (More Zoomed In)
 
-Modify the command as needed for your setup, e.g.:
+Modify the command as needed for your setup:
 
 *Note: Do not use `**` around the number.*
 
@@ -201,7 +201,7 @@ To install everything in one step, use:
 ```sh
 sudo apt update && sudo apt -y full-upgrade && \
 sudo apt install --no-install-recommends -y xserver-xorg x11-xserver-utils xinit openbox chromium unclutter && \
-echo -e '#!/usr/bin/env bash\n# Disable screen blanking\nxset -dpms\nxset s off\nxset s noblank\n\n# Launch openbox\nopenbox-session &\n\n# Hide cursor after 1 second of inactivity\nunclutter -idle 1 -root &\n\n# Wait 5 seconds for Openbox to settle\nsleep 5\n\n# Launch Chromium in kiosk mode\nchromium --force-x11 --noerrdialogs --disable-infobars --force-device-scale-factor=1.0 --kiosk "https://www.erdetfredag.dk/"' | sudo tee /home/pi/start-browser.sh > /dev/null && \
+echo -e '#!/usr/bin/env bash\n# Disable screen blanking\nxset -dpms\nxset s off\nxset s noblank\n\n# Launch openbox\nopenbox-session &\n\n# Hide cursor after 1 second of inactivity\nunclutter -idle 1 -root &\n\n# Wait 5 seconds for Openbox to settle\nsleep 5\n\n# Launch Chromium in kiosk mode\nchromium --force-x11 --noerrdialogs --disable-infobars --force-device-scale-factor=1.0 --kiosk "https://zoomquilt.org/"' | sudo tee /home/pi/start-browser.sh > /dev/null && \
 sudo chmod +x /home/pi/start-browser.sh && \
 echo -e '[Unit]\nDescription=Minimal X Kiosk\nAfter=systemd-user-sessions.service\nConflicts=getty@tty1.service\nAfter=getty@tty1.service\n\n[Service]\nUser=pi\nGroup=pi\nPAMName=login\nTTYPath=/dev/tty1\nTTYReset=yes\nTTYVHangup=yes\nType=simple\nStandardInput=tty\nStandardOutput=journal\nStandardError=journal\n\nExecStart=/usr/bin/xinit /home/pi/start-browser.sh -- :0 -nolisten tcp vt1\nRestart=always\nRestartSec=5\n\n[Install]\nWantedBy=multi-user.target' | sudo tee /etc/systemd/system/kiosk.service > /dev/null && \
 sudo systemctl daemon-reload && \
