@@ -1,62 +1,94 @@
 # Raspberry Pi OS Lite Kiosk Mode Setup
 
-This guide will configure a **Raspberry Pi OS Lite (32-bit)** installation to display a website automatically on a connected monitor upon boot using **Chromium in kiosk mode**.
+This guide sets up **Raspberry Pi OS Lite (32-bit)** to automatically display a website in **Chromium kiosk mode** upon boot.
 
-## **1. Install Required Packages**
-First, install the necessary software:
+---
+
+## **Important: Disable Wayland and Enable X11**
+
+Before proceeding, ensure that Wayland is disabled and X11 is enabled.
+
+To do this, open the Raspberry Pi configuration tool:
 
 ```sh
-sudo apt update
-sudo apt install --no-install-recommends xserver-xorg x11-xserver-utils xinit openbox chromium-browser
+sudo raspi-config
+```
+
+Navigate to:
+- **Advanced Options**
+- **Wayland**
+- Select **X11**
+- Confirm with **Yes**
+
+Then, restart your Raspberry Pi for the changes to take effect:
+
+```sh
+sudo reboot
+```
+
+---
+
+## **1. Install Required Packages and Update System**
+
+Update your system and install the necessary packages:
+
+```sh
+sudo apt update && sudo apt -y full-upgrade && \
+sudo apt install --no-install-recommends -y xserver-xorg x11-xserver-utils xinit openbox chromium unclutter
 ```
 
 - `xserver-xorg`: Provides the X11 server.
 - `x11-xserver-utils`: Utility tools for X11.
 - `xinit`: Allows starting an X session.
 - `openbox`: A lightweight window manager.
-- `chromium-browser`: The Chromium browser.
+- `chromium`: The Chromium browser.
+- `unclutter`: Hides the mouse cursor when inactive.
 
 ---
 
 ## **2. Create an X11 Startup Script**
-We need to create a script that will launch the browser when X starts.
+
+Create a script to launch the browser when X starts:
 
 ```sh
-nano /home/pi/start-browser.sh
+sudo nano /home/pi/start-browser.sh
 ```
 
 Add the following:
 
 ```sh
-#!/bin/bash
-xset -dpms          # Disable display power management
-xset s off          # Disable screen saver
-xset s noblank      # Prevent screen from blanking
+#!/usr/bin/env bash
+# Disable screen blanking
+xset -dpms
+xset s off
+xset s noblank
 
-# Start Openbox window manager
+# Launch openbox
 openbox-session &
 
-# Wait a bit for Openbox to initialize
-sleep 2
+# Hide cursor after 1 second of inactivity
+unclutter -idle 1 -root &
+
+# Wait 5 seconds for Openbox to settle
+sleep 5
 
 # Launch Chromium in kiosk mode
-chromium-browser --noerrdialogs --disable-infobars --kiosk 'http://your-website-url'
+chromium --noerrdialogs --disable-infobars --kiosk "http(s)://your-website-url"
 ```
 
-Replace `'http://your-website-url'` with the actual URL you want to display.
-
-Save the file (`CTRL+X`, then `Y`, then `Enter`).
+Save and exit (`CTRL+X`, then `Y`, then `Enter`).
 
 Make it executable:
 
 ```sh
-chmod +x /home/pi/start-browser.sh
+sudo chmod +x /home/pi/start-browser.sh
 ```
 
 ---
 
 ## **3. Create a systemd Service**
-Now, create a systemd service to run this script on boot.
+
+Create a systemd service to run the script at boot:
 
 ```sh
 sudo nano /etc/systemd/system/kiosk.service
@@ -66,17 +98,26 @@ Add the following:
 
 ```ini
 [Unit]
-Description=Chromium Kiosk Mode
-After=multi-user.target
+Description=Minimal X Kiosk
+After=systemd-user-sessions.service
+Conflicts=getty@tty1.service
+After=getty@tty1.service
 
 [Service]
 User=pi
-Environment=DISPLAY=:0
-ExecStart=/home/pi/start-browser.sh
+Group=pi
+PAMName=login
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+Type=simple
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+
+ExecStart=/usr/bin/xinit /home/pi/start-browser.sh -- :0 -nolisten tcp vt1
 Restart=always
 RestartSec=5
-StandardOutput=syslog
-StandardError=syslog
 
 [Install]
 WantedBy=multi-user.target
@@ -87,7 +128,8 @@ Save and exit (`CTRL+X`, then `Y`, then `Enter`).
 ---
 
 ## **4. Enable and Start the Service**
-Run:
+
+Run the following commands:
 
 ```sh
 sudo systemctl daemon-reload
@@ -102,42 +144,66 @@ This will:
 
 ---
 
-## **5. Test and Reboot**
-Reboot your Raspberry Pi to verify everything works:
+## **5. Set Auto-Login and Reboot**
+
+Ensure the Raspberry Pi auto-logs in and reboots:
 
 ```sh
+sudo raspi-config nonint do_boot_behaviour B2
 sudo reboot
 ```
 
-After boot, your connected monitor should automatically launch the Chromium browser in **kiosk mode** displaying the specified website.
+After rebooting, your connected monitor should automatically display the specified website in **Chromium kiosk mode**.
 
 ---
 
-## **Optional: Auto-Login for pi User**
-If your Pi doesn’t automatically log in as `pi`, enable auto-login:
+## **Customization & Troubleshooting**
+
+### **Change the Website**
+
+To change the website displayed in kiosk mode, edit:
 
 ```sh
-sudo raspi-config
+sudo nano /home/pi/start-browser.sh
 ```
-- Go to **System Options** → **Boot/Auto Login** → **Console Autologin**.
 
-Reboot, and it should work as expected.
+Modify the URL in the `chromium` command and restart the service:
 
----
+```sh
+sudo systemctl restart kiosk.service
+```
 
-## **Customization**
-- To exit kiosk mode, press `CTRL + ALT + F1`, log in, and disable the service with:
-  ```sh
-  sudo systemctl stop kiosk.service
-  ```
-- To change the website, edit `/home/pi/start-browser.sh` and restart the service.
+### **Change the scale/zoom**
 
----
+To change the website scale/zoom in kiosk mode, edit:
 
-This setup ensures a lightweight, stable, and reliable way to show a website on boot using Raspberry Pi OS Lite.
+```sh
+sudo nano /home/pi/start-browser.sh
+```
+
+Add the `--force-device-scale-factor=1.5` flag before the URL.
+This will add a 150% scale/zoom.
+Remember to restart the service:
+
+```sh
+sudo systemctl restart kiosk.service
+```
+
+
 
 # One-Liner
 **Note:** Remember to change the URL.
 ```sh
-sudo apt update && sudo apt install --no-install-recommends -y xserver-xorg x11-xserver-utils xinit openbox chromium-browser && echo -e '#!/bin/bash\nxset -dpms\nxset s off\nxset s noblank\nopenbox-session &\nsleep 2\nchromium-browser --noerrdialogs --disable-infobars --kiosk "http://your-website-url"' | sudo tee /home/pi/start-browser.sh > /dev/null && sudo chmod +x /home/pi/start-browser.sh && echo -e '[Unit]\nDescription=Chromium Kiosk Mode\nAfter=multi-user.target\n\n[Service]\nUser=pi\nEnvironment=DISPLAY=:0\nExecStart=/home/pi/start-browser.sh\nRestart=always\nRestartSec=5\nStandardOutput=syslog\nStandardError=syslog\n\n[Install]\nWantedBy=multi-user.target' | sudo tee /etc/systemd/system/kiosk.service > /dev/null && sudo systemctl daemon-reload && sudo systemctl enable kiosk.service && sudo systemctl start kiosk.service && sudo raspi-config nonint do_boot_behaviour B2 && sudo reboot
+sudo apt update && sudo apt -y full-upgrade && \
+sudo apt install --no-install-recommends -y xserver-xorg x11-xserver-utils xinit openbox chromium unclutter && \
+echo -e '#!/usr/bin/env bash\n# Disable screen blanking\nxset -dpms\nxset s off\nxset s noblank\n\n# Launch openbox\nopenbox-session &\n\n# Hide cursor after 1 second of inactivity\nunclutter -idle 1 -root &\n\n# Wait 5 seconds for Openbox to settle\nsleep 5\n\n# Launch Chromium in kiosk mode\nchromium --noerrdialogs --disable-infobars --kiosk "https://www.erdetfredag.dk/"' | sudo tee /home/pi/start-browser.sh > /dev/null && \
+sudo chmod +x /home/pi/start-browser.sh && \
+echo -e '[Unit]\nDescription=Minimal X Kiosk\nAfter=systemd-user-sessions.service\nConflicts=getty@tty1.service\nAfter=getty@tty1.service\n\n[Service]\nUser=pi\nGroup=pi\nPAMName=login\nTTYPath=/dev/tty1\nTTYReset=yes\nTTYVHangup=yes\nType=simple\nStandardInput=tty\nStandardOutput=journal\nStandardError=journal\n\nExecStart=/usr/bin/xinit /home/pi/start-browser.sh -- :0 -nolisten tcp vt1\nRestart=always\nRestartSec=5\n\n[Install]\nWantedBy=multi-user.target' | sudo tee /etc/systemd/system/kiosk.service > /dev/null && \
+sudo systemctl daemon-reload && \
+sudo systemctl enable kiosk.service && \
+sudo systemctl start kiosk.service && \
+sudo raspi-config nonint do_boot_behaviour B2 && \
+sudo reboot
 ```
+
+
