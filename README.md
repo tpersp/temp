@@ -50,7 +50,7 @@ unclutter -idle 1 -root &
 sleep 5
 
 # Launch Chromium in kiosk mode, forcing it to use X11 and preventing pop-ups
-chromium --force-x11 --noerrdialogs --disable-infobars --kiosk "http(s)://your-website-url"
+chromium --force-x11 --noerrdialogs --disable-infobars --force-device-scale-factor=1.0 --kiosk "http(s)://your-website-url"
 ```
 
 ### **Why These Commands?**
@@ -168,7 +168,16 @@ sudo systemctl restart kiosk.service
 
 ### **Change the Scale/Zoom**
 
-To adjust the website scale, add `--force-device-scale-factor=X` to the Chromium command preferably before the URL for consistency:
+To adjust the website scale, edit the `--force-device-scale-factor=X` flag in the Chromium command. This determines the zoom level of the displayed website.
+
+#### **Examples:**
+- `0.50`  = 50%   (More Zoomed Out)
+- `0.75`  = 75%   (Zoomed Out)
+- `1.0`   = 100%  (Default, No Scaling)
+- `1.25`  = 125%  (Zoomed In)
+- `1.5`   = 150%  (More Zoomed In)
+
+Modify the command as needed for your setup:
 
 ```sh
 chromium --force-x11 --noerrdialogs --disable-infobars --kiosk --force-device-scale-factor=1.5 "http(s)://your-website-url"
@@ -190,7 +199,7 @@ To install everything in one step, use:
 ```sh
 sudo apt update && sudo apt -y full-upgrade && \
 sudo apt install --no-install-recommends -y xserver-xorg x11-xserver-utils xinit openbox chromium unclutter && \
-echo -e '#!/usr/bin/env bash\n# Disable screen blanking\nxset -dpms\nxset s off\nxset s noblank\n\n# Launch openbox\nopenbox-session &\n\n# Hide cursor after 1 second of inactivity\nunclutter -idle 1 -root &\n\n# Wait 5 seconds for Openbox to settle\nsleep 5\n\n# Launch Chromium in kiosk mode\nchromium --force-x11 --noerrdialogs --disable-infobars --kiosk "https://www.erdetfredag.dk/"' | sudo tee /home/pi/start-browser.sh > /dev/null && \
+echo -e '#!/usr/bin/env bash\n# Disable screen blanking\nxset -dpms\nxset s off\nxset s noblank\n\n# Launch openbox\nopenbox-session &\n\n# Hide cursor after 1 second of inactivity\nunclutter -idle 1 -root &\n\n# Wait 5 seconds for Openbox to settle\nsleep 5\n\n# Launch Chromium in kiosk mode\nchromium --force-x11 --noerrdialogs --disable-infobars --force-device-scale-factor=1.0 --kiosk "https://www.erdetfredag.dk/"' | sudo tee /home/pi/start-browser.sh > /dev/null && \
 sudo chmod +x /home/pi/start-browser.sh && \
 echo -e '[Unit]\nDescription=Minimal X Kiosk\nAfter=systemd-user-sessions.service\nConflicts=getty@tty1.service\nAfter=getty@tty1.service\n\n[Service]\nUser=pi\nGroup=pi\nPAMName=login\nTTYPath=/dev/tty1\nTTYReset=yes\nTTYVHangup=yes\nType=simple\nStandardInput=tty\nStandardOutput=journal\nStandardError=journal\n\nExecStart=/usr/bin/xinit /home/pi/start-browser.sh -- :0 -nolisten tcp vt1\nRestart=always\nRestartSec=5\n\n[Install]\nWantedBy=multi-user.target' | sudo tee /etc/systemd/system/kiosk.service > /dev/null && \
 sudo systemctl daemon-reload && \
@@ -198,4 +207,4 @@ sudo systemctl enable kiosk.service && \
 sudo systemctl start kiosk.service && \
 sudo raspi-config nonint do_boot_behaviour B2 && \
 sudo reboot
-
+```
