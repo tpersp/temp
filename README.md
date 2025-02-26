@@ -4,30 +4,6 @@ This guide sets up **Raspberry Pi OS Lite (32-bit)** to automatically display a 
 
 ---
 
-## **Important: Disable Wayland and Enable X11**
-
-Before proceeding, ensure that Wayland is disabled and X11 is enabled.
-
-To do this, open the Raspberry Pi configuration tool:
-
-```sh
-sudo raspi-config
-```
-
-Navigate to:
-- **Advanced Options**
-- **Wayland**
-- Select **X11**
-- Confirm with **Yes**
-
-Then, restart your Raspberry Pi for the changes to take effect:
-
-```sh
-sudo reboot
-```
-
----
-
 ## **1. Install Required Packages and Update System**
 
 Update your system and install the necessary packages:
