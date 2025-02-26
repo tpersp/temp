@@ -6,25 +6,26 @@ This guide sets up **Raspberry Pi OS Lite (32-bit)** to automatically display a 
 
 ## **1. Install Required Packages and Update System**
 
-Update your system and install the necessary packages:
+We start by updating the system to ensure all installed packages are up to date and install only the necessary components to keep the system lightweight:
 
 ```sh
 sudo apt update && sudo apt -y full-upgrade && \
 sudo apt install --no-install-recommends -y xserver-xorg x11-xserver-utils xinit openbox chromium unclutter
 ```
 
-- `xserver-xorg`: Provides the X11 server.
-- `x11-xserver-utils`: Utility tools for X11.
-- `xinit`: Allows starting an X session.
-- `openbox`: A lightweight window manager.
-- `chromium`: The Chromium browser.
-- `unclutter`: Hides the mouse cursor when inactive.
+### **Explanation of Installed Packages**
+- `xserver-xorg`: Provides the X11 server, which is required to run graphical applications.
+- `x11-xserver-utils`: Utility tools for X11, allowing additional configurations like display management.
+- `xinit`: Allows starting an X session manually, which is necessary since we are not using a full desktop environment.
+- `openbox`: A lightweight window manager that provides a minimal graphical environment.
+- `chromium`: The Chromium browser, which will be used to display the website.
+- `unclutter`: Hides the mouse cursor when inactive, keeping the kiosk display clean.
 
 ---
 
 ## **2. Create an X11 Startup Script**
 
-Create a script to launch the browser when X starts:
+We create a script to start the graphical session and launch the Chromium browser:
 
 ```sh
 sudo nano /home/pi/start-browser.sh
@@ -34,23 +35,30 @@ Add the following:
 
 ```sh
 #!/usr/bin/env bash
-# Disable screen blanking
-xset -dpms
-xset s off
-xset s noblank
+# Disable screen blanking to prevent the display from turning off
+xset -dpms  # Disables Energy Star features
+xset s off  # Turns off the screensaver
+xset s noblank  # Prevents blank screen
 
-# Launch openbox
+# Launch Openbox, a minimal window manager
 openbox-session &
 
-# Hide cursor after 1 second of inactivity
+# Hide the cursor after 1 second of inactivity
 unclutter -idle 1 -root &
 
-# Wait 5 seconds for Openbox to settle
+# Wait 5 seconds to allow Openbox to fully initialize
 sleep 5
 
-# Launch Chromium in kiosk mode
+# Launch Chromium in kiosk mode, forcing it to use X11 and preventing pop-ups
 chromium --force-x11 --noerrdialogs --disable-infobars --kiosk "http(s)://your-website-url"
 ```
+
+### **Why These Commands?**
+- `xset` commands ensure the display remains on at all times.
+- `openbox-session &` starts a minimal window manager to allow Chromium to run in full-screen.
+- `unclutter` removes the cursor to make the display cleaner.
+- `sleep 5` ensures that Openbox has fully loaded before launching Chromium.
+- Chromium is launched in **kiosk mode**, which makes it run in fullscreen without user interface elements.
 
 Save and exit (`CTRL+X`, then `Y`, then `Enter`).
 
@@ -64,7 +72,7 @@ sudo chmod +x /home/pi/start-browser.sh
 
 ## **3. Create a systemd Service**
 
-Create a systemd service to run the script at boot:
+We create a systemd service to automatically run the script on boot:
 
 ```sh
 sudo nano /etc/systemd/system/kiosk.service
@@ -99,6 +107,11 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
+### **Why Use systemd?**
+- Ensures the script starts automatically on boot.
+- Runs under the `pi` user to avoid permission issues.
+- If the script crashes, systemd will **restart it automatically** after 5 seconds.
+
 Save and exit (`CTRL+X`, then `Y`, then `Enter`).
 
 ---
@@ -113,23 +126,27 @@ sudo systemctl enable kiosk.service
 sudo systemctl start kiosk.service
 ```
 
-This will:
-- Reload systemd to recognize the new service.
-- Enable it to start on boot.
-- Start it immediately.
+### **What These Commands Do:**
+- `daemon-reload` reloads systemd to recognize the new service.
+- `enable` ensures the service starts automatically on boot.
+- `start` runs the service immediately.
 
 ---
 
 ## **5. Set Auto-Login and Reboot**
 
-Ensure the Raspberry Pi auto-logs in and reboots:
+We need to configure the Raspberry Pi to automatically log in and run the script on startup:
 
 ```sh
 sudo raspi-config nonint do_boot_behaviour B2
 sudo reboot
 ```
 
-After rebooting, your connected monitor should automatically display the specified website in **Chromium kiosk mode**.
+### **Why This Step?**
+- `do_boot_behaviour B2` sets the Pi to automatically log into the console session without requiring a manual login.
+- `reboot` applies all changes and starts the kiosk automatically.
+
+After rebooting, your monitor should display the specified website in **Chromium kiosk mode**.
 
 ---
 
@@ -137,7 +154,7 @@ After rebooting, your connected monitor should automatically display the specifi
 
 ### **Change the Website**
 
-To change the website displayed in kiosk mode, edit:
+To change the displayed website:
 
 ```sh
 sudo nano /home/pi/start-browser.sh
@@ -149,26 +166,27 @@ Modify the URL in the `chromium` command and restart the service:
 sudo systemctl restart kiosk.service
 ```
 
-### **Change the scale/zoom**
+### **Change the Scale/Zoom**
 
-To change the website scale/zoom in kiosk mode, edit:
+To adjust the website scale, add `--force-device-scale-factor=X` to the Chromium command:
 
 ```sh
-sudo nano /home/pi/start-browser.sh
+chromium --force-x11 --noerrdialogs --disable-infobars --kiosk "http(s)://your-website-url" --force-device-scale-factor=1.5
 ```
 
-Add the `--force-device-scale-factor=1.5` flag before the URL.
-This will add a 150% scale/zoom.
-Remember to restart the service:
+Restart the service:
 
 ```sh
 sudo systemctl restart kiosk.service
 ```
 
+---
 
+## **One-Line Installation Command**
 
-# Copy-Paste-Enter
-**Note:** Remember to change the URL.
+To install everything in one step, use:
+**NOTE:** Remember to change the URL.
+
 ```sh
 sudo apt update && sudo apt -y full-upgrade && \
 sudo apt install --no-install-recommends -y xserver-xorg x11-xserver-utils xinit openbox chromium unclutter && \
@@ -180,4 +198,4 @@ sudo systemctl enable kiosk.service && \
 sudo systemctl start kiosk.service && \
 sudo raspi-config nonint do_boot_behaviour B2 && \
 sudo reboot
-```
+
