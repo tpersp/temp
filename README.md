@@ -191,12 +191,12 @@ sudo systemctl restart kiosk.service
 
 
 
-# One-Liner
+# Copy-Paste-Enter
 **Note:** Remember to change the URL.
 ```sh
 sudo apt update && sudo apt -y full-upgrade && \
 sudo apt install --no-install-recommends -y xserver-xorg x11-xserver-utils xinit openbox chromium unclutter && \
-echo -e '#!/usr/bin/env bash\n# Disable screen blanking\nxset -dpms\nxset s off\nxset s noblank\n\n# Launch openbox\nopenbox-session &\n\n# Hide cursor after 1 second of inactivity\nunclutter -idle 1 -root &\n\n# Wait 5 seconds for Openbox to settle\nsleep 5\n\n# Launch Chromium in kiosk mode\nchromium --noerrdialogs --disable-infobars --kiosk "https://www.erdetfredag.dk/"' | sudo tee /home/pi/start-browser.sh > /dev/null && \
+echo -e '#!/usr/bin/env bash\n# Disable screen blanking\nxset -dpms\nxset s off\nxset s noblank\n\n# Launch openbox\nopenbox-session &\n\n# Hide cursor after 1 second of inactivity\nunclutter -idle 1 -root &\n\n# Wait 5 seconds for Openbox to settle\nsleep 5\n\n# Launch Chromium in kiosk mode\nchromium --force-x11 --noerrdialogs --disable-infobars --kiosk "https://www.erdetfredag.dk/"' | sudo tee /home/pi/start-browser.sh > /dev/null && \
 sudo chmod +x /home/pi/start-browser.sh && \
 echo -e '[Unit]\nDescription=Minimal X Kiosk\nAfter=systemd-user-sessions.service\nConflicts=getty@tty1.service\nAfter=getty@tty1.service\n\n[Service]\nUser=pi\nGroup=pi\nPAMName=login\nTTYPath=/dev/tty1\nTTYReset=yes\nTTYVHangup=yes\nType=simple\nStandardInput=tty\nStandardOutput=journal\nStandardError=journal\n\nExecStart=/usr/bin/xinit /home/pi/start-browser.sh -- :0 -nolisten tcp vt1\nRestart=always\nRestartSec=5\n\n[Install]\nWantedBy=multi-user.target' | sudo tee /etc/systemd/system/kiosk.service > /dev/null && \
 sudo systemctl daemon-reload && \
@@ -205,5 +205,3 @@ sudo systemctl start kiosk.service && \
 sudo raspi-config nonint do_boot_behaviour B2 && \
 sudo reboot
 ```
-
-
