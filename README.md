@@ -168,10 +168,10 @@ sudo systemctl restart kiosk.service
 
 ### **Change the Scale/Zoom**
 
-To adjust the website scale, add `--force-device-scale-factor=X` to the Chromium command:
+To adjust the website scale, add `--force-device-scale-factor=X` to the Chromium command preferably before the URL for consistency:
 
 ```sh
-chromium --force-x11 --noerrdialogs --disable-infobars --kiosk **--force-device-scale-factor=1.5** "http(s)://your-website-url"
+chromium --force-x11 --noerrdialogs --disable-infobars --kiosk --force-device-scale-factor=1.5 "http(s)://your-website-url"
 ```
 
 Restart the service:
