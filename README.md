@@ -1,6 +1,6 @@
 # Raspberry Pi OS Lite Kiosk Mode Setup
 
-This repository contains guides for setting up Raspberry Pi OS Lite (32-bit) to automatically display websites using **Chromium in kiosk mode** upon boot. It includes instructions for single-screen and dual-screen setups, ensuring a lightweight, efficient, and automated kiosk solution ideal for dashboards, digital signage, or information displays.
+This repository contains guides for setting up Raspberry Pi OS Lite to automatically display websites using **Chromium in kiosk mode** upon boot. It includes instructions for single-screen and dual-screen setups, ensuring a lightweight, efficient, and automated kiosk solution ideal for dashboards, digital signage, or information displays.
 
 ## Contents
 
