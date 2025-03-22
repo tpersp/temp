@@ -1,6 +1,6 @@
 # Raspberry Pi OS Lite Kiosk Mode Setup
 
-This guide sets up **Raspberry Pi OS Lite (32-bit)** to automatically display a website in **Chromium kiosk mode** upon boot.
+This guide sets up **Raspberry Pi OS Lite** to automatically display a website in **Chromium kiosk mode** upon boot.
 
 ---
 
