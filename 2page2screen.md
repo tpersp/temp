@@ -1,6 +1,24 @@
 # Raspberry Pi OS Lite Dual-Screen Kiosk Mode Setup
 
-This guide sets up **Raspberry Pi OS Lite (32-bit)** to automatically display websites on two separate HDMI-connected screens using **Chromium in kiosk mode** upon boot.
+This guide sets up **Raspberry Pi OS Lite** to automatically display websites on two separate HDMI-connected screens using **Chromium in kiosk mode** upon boot.
+
+---
+
+## **0. Configure Raspberry Pi to Use X11**
+
+Ensure your Raspberry Pi is configured to use X11 instead of Wayland:
+
+```sh
+sudo raspi-config
+```
+
+Navigate to:
+
+```
+Advanced Options → Wayland →  Use X11 (Disable Wayland)
+```
+
+Reboot the Raspberry Pi after applying this change.
 
 ---
 
