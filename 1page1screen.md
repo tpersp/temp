@@ -4,6 +4,24 @@ This guide sets up **Raspberry Pi OS Lite** to automatically display a website i
 
 ---
 
+## **0. Configure Raspberry Pi to Use X11**
+
+Ensure your Raspberry Pi is configured to use X11 instead of Wayland:
+
+```sh
+sudo raspi-config
+```
+
+Navigate to:
+
+```
+Advanced Options → Wayland →  Use X11 (Disable Wayland)
+```
+
+Reboot the Raspberry Pi after applying this change.
+
+---
+
 ## **1. Install Required Packages and Update System**
 
 We start by updating the system to ensure all installed packages are up to date and install only the necessary components to keep the system lightweight:
