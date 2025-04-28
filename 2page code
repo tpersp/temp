@@ -207,6 +207,9 @@ sudo systemctl daemon-reload && \
 sudo systemctl enable kiosk.service && \
 sudo systemctl start kiosk.service && \
 sudo raspi-config nonint do_boot_behaviour B2 && \
+
+
+//Note: Write down detailed description of each part of the code, so a successor to me can read and understand it all, make changes where needed and easily maintain the code.
 sudo reboot
 
 
